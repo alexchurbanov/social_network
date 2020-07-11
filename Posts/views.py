@@ -8,18 +8,20 @@ from datetime import date
 
 from .models import Post, PostAnalytics
 from .serializers import PostSerializer, PostAnalyticsSerializer
-from .filters import DateFilter
+from .filters import AnalyticsFilter, PostsFilter
 
 
 class PostViewSet(viewsets.ModelViewSet):
 
     serializer_class = PostSerializer
-    filter_backends = (SearchFilter, OrderingFilter)
+    filter_backends = (SearchFilter, OrderingFilter, filters.DjangoFilterBackend)
+    filterset_class = PostsFilter
+
     search_fields = ('text', 'subject')
     ordering_fields = ('likes', 'owner__username', 'subject', 'date_created', 'last_edit')
 
     def get_queryset(self):
-        return Post.objects.all().order_by('owner')
+        return Post.objects.all().order_by('-owner')
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -45,7 +47,7 @@ class PostViewSet(viewsets.ModelViewSet):
 class PostAnalyticsViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = PostAnalyticsSerializer
     filter_backends = (OrderingFilter, filters.DjangoFilterBackend)
-    filterset_class = DateFilter
+    filterset_class = AnalyticsFilter
 
     ordering_fields = ('likes', 'date')
     queryset = PostAnalytics.objects.all().order_by('-date')
