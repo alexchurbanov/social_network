@@ -47,7 +47,6 @@ INSTALLED_APPS = [
 
     # 3rd party apps
     'rest_framework',
-    'rest_framework_simplejwt.token_blacklist',
     'crispy_forms',
     'django_filters',
 ]

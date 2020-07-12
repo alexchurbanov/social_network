@@ -21,6 +21,8 @@ class Post(models.Model):
 
 
 class PostAnalytics(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     date = models.DateField(auto_now_add=True, editable=False, unique=True)
     likes = models.IntegerField(default=0, editable=False)
+
+    class Meta:
+        verbose_name_plural = 'Posts Analytics'

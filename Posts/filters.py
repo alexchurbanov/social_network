@@ -10,7 +10,7 @@ class AnalyticsFilter(filters.FilterSet):
 
     class Meta:
         model = PostAnalytics
-        fields = ('date_from', 'date_to')
+        fields = ('date_from', 'date_to', 'likes_more_than', 'likes_less_than')
 
 
 class PostsFilter(filters.FilterSet):
