@@ -13,23 +13,23 @@ from Accounts.functions import log_user_activity, get_client_ip
 
 
 class UsersViewSet(viewsets.ModelViewSet):
+    """
+    Show, register or modify user
+    """
     serializer_class = UserSerializer
     permission_classes = (AllowAny,)
 
     def get_queryset(self):
         queryset = ''
         user = self.request.user
-        if user.is_superuser:
-            queryset = User.objects.all().order_by('username')
-        elif user.is_authenticated:
+        if user.is_authenticated:
             queryset = User.objects.filter(id=user.id)
         return queryset
 
     def create(self, request, *args, **kwargs):
         if not request.user.is_anonymous:
-            if not request.user.is_superuser:
-                return Response({'status': 'error',
-                                 'message': 'you already signed up'})
+            return Response({'status': 'error',
+                             'message': 'you already signed up'})
 
         return super(UsersViewSet, self).create(request, *args, **kwargs)
 
@@ -59,22 +59,36 @@ class UsersViewSet(viewsets.ModelViewSet):
 
 
 class JWTObtainPairView(TokenObtainPairView):
+    """
+    JWT login. Take user credentials and return refresh and access JWT
+    """
     serializer_class = JWTObtainPairSerializer
 
 
 @api_view(['GET', ])
 @permission_classes([IsAuthenticated, ])
 def user_activity_view(request, user_id):
-    if not request.user.is_superuser:
+    """
+    Shows when user was logged in last time and when he made last
+    request to the service.
+    """
+    if not request.user.is_superuser or not request.user.is_staff:
         if request.user.id != user_id:
             return Response({'status': 'error'}, status=status.HTTP_401_UNAUTHORIZED)
 
     instance = UserLastActivity.objects.get(user=user_id)
     serializer = UserLastActivitySerializer(instance)
+
+    log_user_activity(request.user, last_request_IP=get_client_ip(request),
+                      last_request=timezone.now(), last_request_type='get user activity')
+
     return Response(serializer.data)
 
 
 class LoginView(GenericAPIView):
+    """
+    Session login.
+    """
     serializer_class = UserLoginSerializer
     permission_classes = (AllowAny,)
 
@@ -97,6 +111,9 @@ class LoginView(GenericAPIView):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated, ])
 def logout_view(request):
+    """
+    Logout for authenticated users that using session.
+    """
     logout(request)
     return Response({'status': 'success',
                      'message': 'logged out'}, status=status.HTTP_200_OK)
