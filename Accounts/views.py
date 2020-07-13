@@ -75,9 +75,12 @@ def user_activity_view(request, user_id):
     if not request.user.is_superuser or not request.user.is_staff:
         if request.user.id != user_id:
             return Response({'status': 'error'}, status=status.HTTP_401_UNAUTHORIZED)
-
-    instance = UserLastActivity.objects.get(user=user_id)
-    serializer = UserLastActivitySerializer(instance)
+    try:
+        instance = UserLastActivity.objects.get(user=user_id)
+        serializer = UserLastActivitySerializer(instance)
+    except UserLastActivity.DoesNotExist:
+        return Response({'status': 'error',
+                         'message': "User with this id doesn't exist"}, status=status.HTTP_404_NOT_FOUND)
 
     log_user_activity(request.user, last_request_IP=get_client_ip(request),
                       last_request=timezone.now(), last_request_type='get user activity')
