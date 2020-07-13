@@ -46,7 +46,7 @@ class UserLastActivitySerializer(serializers.ModelSerializer):
 class JWTObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super(JWTObtainPairSerializer, self).validate(attrs)
-        user_logged_in.send(self.user, user=self.user, request=self.context['request'])
+        user_logged_in.send(self.user.__class__, user=self.user, request=self.context['request'])
         return data
 
 

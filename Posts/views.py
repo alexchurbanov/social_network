@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, mixins
 from rest_framework.response import Response
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.decorators import api_view, permission_classes
@@ -28,14 +28,12 @@ class PostViewSet(viewsets.ModelViewSet):
         return Post.objects.all().order_by('-owner')
 
     def list(self, request, *args, **kwargs):
-
         log_user_activity(request.user, last_request_IP=get_client_ip(request),
                           last_request=timezone.now(), last_request_type='get posts')
 
         return super(PostViewSet, self).list(request, *args, **kwargs)
 
     def create(self, request, *args, **kwargs):
-
         log_user_activity(request.user, last_request_IP=get_client_ip(request),
                           last_request=timezone.now(), last_request_type='create post')
 
@@ -44,38 +42,39 @@ class PostViewSet(viewsets.ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         log_user_activity(request.user, last_request_IP=get_client_ip(request),
                           last_request=timezone.now(), last_request_type='get post')
+
         return super(PostViewSet, self).retrieve(request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
-
-        log_user_activity(request.user, last_request_IP=get_client_ip(request),
-                          last_request=timezone.now(), last_request_type='edit post')
 
         if instance.owner != self.request.user:
             message = {'status': 'error',
                        'message': "You can't edit this post"}
             return Response(data=message, status=status.HTTP_403_FORBIDDEN)
 
+        log_user_activity(request.user, last_request_IP=get_client_ip(request),
+                          last_request=timezone.now(), last_request_type='edit post')
+
         return super(PostViewSet, self).update(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-
-        log_user_activity(request.user, last_request_IP=get_client_ip(request),
-                          last_request=timezone.now(), last_request_type='delete post')
 
         if instance.owner != self.request.user:
             message = {'status': 'error',
                        'message': "You can't delete this post"}
             return Response(data=message, status=status.HTTP_403_FORBIDDEN)
 
+        log_user_activity(request.user, last_request_IP=get_client_ip(request),
+                          last_request=timezone.now(), last_request_type='delete post')
+
         return super(PostViewSet, self).destroy(request, *args, **kwargs)
 
 
-class PostsAnalyticsViewSet(viewsets.ReadOnlyModelViewSet):
+class PostsAnalyticsViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     """
-     Analytics about how many likes was made
+     Analytics about how many likes were made.
     """
     serializer_class = PostAnalyticsSerializer
     filter_backends = (OrderingFilter, filters.DjangoFilterBackend)
@@ -87,11 +86,7 @@ class PostsAnalyticsViewSet(viewsets.ReadOnlyModelViewSet):
     def list(self, request, *args, **kwargs):
         log_user_activity(request.user, last_request_IP=get_client_ip(request),
                           last_request=timezone.now(), last_request_type='get analytics')
-        return super(PostsAnalyticsViewSet, self).list(request, *args, **kwargs)
 
-    def retrieve(self, request, *args, **kwargs):
-        log_user_activity(request.user, last_request_IP=get_client_ip(request),
-                          last_request=timezone.now(), last_request_type='get analytics')
         return super(PostsAnalyticsViewSet, self).list(request, *args, **kwargs)
 
 

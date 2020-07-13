@@ -3,7 +3,7 @@ from .models import Post, PostAnalytics
 
 
 class PostSerializer(serializers.ModelSerializer):
-    owner = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    owner = serializers.HiddenField(default=serializers.CreateOnlyDefault(serializers.CurrentUserDefault()))
     owner_username = serializers.CharField(source='owner.username', read_only=True)
     liked_by = serializers.StringRelatedField(many=True, read_only=True)
 
@@ -15,4 +15,4 @@ class PostSerializer(serializers.ModelSerializer):
 class PostAnalyticsSerializer(serializers.ModelSerializer):
     class Meta:
         model = PostAnalytics
-        fields = '__all__'
+        exclude = ('id',)
