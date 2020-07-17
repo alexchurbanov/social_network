@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer,PasswordField
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, PasswordField
 from django.contrib.auth.signals import user_logged_in
 
 from .models import User, UserLastActivity
@@ -9,11 +9,14 @@ from .models import User, UserLastActivity
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'email', 'username', 'password', 'date_joined')
+        fields = ('email', 'username',
+                  'password', 'date_joined', 'is_staff')
         extra_kwargs = {
             'password': {'write_only': True,
                          'style': {'input_type': 'password'}},
+            'email': {'write_only': True},
             'date_joined': {'read_only': True},
+            'is_staff': {'read_only': True},
         }
 
     def create(self, validated_data):
@@ -25,13 +28,28 @@ class UserSerializer(serializers.ModelSerializer):
         return super(UserSerializer, self).update(instance, validated_data)
 
 
-class UserLoginSerializer(serializers.Serializer):
-    username_field = User.USERNAME_FIELD
+class UserDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        exclude = ('password', 'is_superuser', 'is_active',
+                   'groups', 'user_permissions',)
+        extra_kwargs = {
+            'date_joined': {'read_only': True},
+            'is_staff': {'read_only': True},
+        }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields[self.username_field] = serializers.CharField()
-        self.fields['password'] = PasswordField()
+
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = PasswordField(required=True)
+    new_password = PasswordField(required=True)
+
+    class Meta:
+        model = User
+
+
+class UserLoginSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+    password = PasswordField(required=True)
 
     class Meta:
         model = User
@@ -48,5 +66,3 @@ class JWTObtainPairSerializer(TokenObtainPairSerializer):
         data = super(JWTObtainPairSerializer, self).validate(attrs)
         user_logged_in.send(self.user.__class__, user=self.user, request=self.context['request'])
         return data
-
-
