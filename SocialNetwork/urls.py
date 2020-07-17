@@ -28,7 +28,6 @@ urlpatterns = [
     path('api/auth/jwt/refresh/', TokenRefreshView.as_view(), name='refresh_tokens'),
     path('api/auth/jwt/verify/', TokenVerifyView.as_view(), name='verify_tokens'),
     path('api/', include(api_router.urls)),
-    path('api/users/', include('Accounts.urls')),
     path('api/posts/', include('Posts.urls')),
     path('openapi/', schema_view, name='openapi-schema'),
     path('', TemplateView.as_view(
