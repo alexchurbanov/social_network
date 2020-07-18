@@ -7,7 +7,7 @@ class IsProfileOwnerOrAdmin(BasePermission):
             return True
 
         if 'pk' in view.kwargs.keys():
-            if view.kwargs['pk'] == 'me':
+            if view.kwargs['pk'] == request.user.id or view.kwargs['pk'] == 'me':
                 return True
             else:
                 return False
