@@ -7,9 +7,13 @@ class IsProfileOwnerOrAdmin(BasePermission):
             return True
 
         if 'pk' in view.kwargs.keys():
+<<<<<<< Updated upstream
+            if view.kwargs['pk'] == 'me':
+=======
             if request.user.is_anonymous:
                 return False
-            if view.kwargs['pk'] == request.user.id or view.kwargs['pk'] == 'me':
+            if view.kwargs['pk'] == str(request.user.id) or view.kwargs['pk'] == 'me':
+>>>>>>> Stashed changes
                 return True
             else:
                 return False

@@ -43,10 +43,10 @@ class UsersViewSet(viewsets.ModelViewSet):
 
     def get_serializer(self, *args, **kwargs):
         kwargs['context'] = self.get_serializer_context()
-        if self.action == 'change_password':
-            return self.change_password_serializer_class(*args, **kwargs)
-        elif self.action == 'update':
+        if self.action == 'update' or self.action == 'retrieve':
             return self.detail_serializer_class(*args, **kwargs)
+        elif self.action == 'change_password':
+            return self.change_password_serializer_class(*args, **kwargs)
         else:
             return self.serializer_class(*args, **kwargs)
 
@@ -63,15 +63,12 @@ class UsersViewSet(viewsets.ModelViewSet):
         """
         log_user_activity(request.user, last_request_IP=get_client_ip(request),
                           last_request=timezone.now(), last_request_type='delete user')
-        if kwargs['pk'] == request.user.id or kwargs['pk'] == 'me' or request.user.is_superuser:
-            instance = self.get_object()
-            instance.is_active = False
-            instance.save()
-            return Response({'status': 'success',
-                             'message': 'Account is not active now'}, status=status.HTTP_200_OK)
-        else:
-            return Response({'status': 'error',
-                             'message': "You don't have permissions to do that"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        instance = self.get_object()
+        instance.is_active = False
+        instance.save()
+        return Response({'status': 'success',
+                         'message': 'Account is not active now'}, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
         log_user_activity(request.user, last_request_IP=get_client_ip(request),
@@ -83,29 +80,18 @@ class UsersViewSet(viewsets.ModelViewSet):
         """
         If provided 'id' is "me" then return the current user.
         """
-        if not request.user.is_authenticated:
-            return Response({'status': 'error',
-                             'message': 'Log in first'}, status=status.HTTP_401_UNAUTHORIZED)
-
-        if kwargs['pk'] == 'me':
-            serializer = self.detail_serializer_class
-        else:
-            serializer = self.get_serializer
-
         log_user_activity(request.user, last_request_IP=get_client_ip(request),
                           last_request=timezone.now(), last_request_type='get user')
         instance = self.get_object()
-        serialized = serializer(instance)
-        return Response(serialized.data)
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
-    @action(methods=['POST'], detail=True, serializer_class=ChangePasswordSerializer)
+    @action(methods=['POST'], detail=True, serializer_class=ChangePasswordSerializer,
+            permission_classes=[IsAuthenticated, IsProfileOwnerOrAdmin])
     def change_password(self, request, pk):
         """
         Change your password.
         """
-        if pk != 'me' and pk != request.user.id:
-            return Response({'status': 'error',
-                             'message': 'You can change only your password'}, status=status.HTTP_401_UNAUTHORIZED)
 
         instance = self.get_object()
         serializer = self.get_serializer(data=request.data)
@@ -124,23 +110,14 @@ class UsersViewSet(viewsets.ModelViewSet):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(methods=['GET'], detail=True)
+    @action(methods=['GET'], detail=True, permission_classes=[IsAuthenticated, IsProfileOwnerOrAdmin])
     def activity(self, request, pk):
         """
         Shows when user was logged in last time and when he made last
         request to the service.
         """
-        if not request.user.is_authenticated:
-            return Response({'status': 'error',
-                             'message': 'Log in first'}, status=status.HTTP_401_UNAUTHORIZED)
         if pk == 'me':
             pk = request.user.id
-        else:
-            if request.user.id != pk:
-                if not request.user.is_superuser or not request.user.is_staff:
-                    return Response({'status': 'error',
-                                     'message': 'Unauthorized to see this user activity'},
-                                    status=status.HTTP_401_UNAUTHORIZED)
 
         try:
             instance = UserLastActivity.objects.get(user=pk)
