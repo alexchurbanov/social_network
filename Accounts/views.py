@@ -4,16 +4,13 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
-from django.utils import timezone
 from django.contrib.auth import authenticate, login, logout
 from rest_framework.filters import SearchFilter, OrderingFilter
 from django_filters import rest_framework as filters
 
-from .serializers import (UserSerializer, JWTObtainPairSerializer,
-                          UserLastActivitySerializer, UserLoginSerializer,
-                          UserDetailSerializer, ChangePasswordSerializer)
-from .models import User, UserLastActivity
-from Accounts.functions import log_user_activity, get_client_ip
+from .serializers import (UserSerializer, JWTObtainPairSerializer, UserLoginSerializer,
+                          UserDetailSerializer, ChangePasswordSerializer, UserLastActivitySerializer)
+from .models import User
 from .filters import UsersFilter
 from .permissions import IsProfileOwnerOrAdmin
 
@@ -45,8 +42,6 @@ class UsersViewSet(viewsets.ModelViewSet):
         kwargs['context'] = self.get_serializer_context()
         if self.action == 'update' or self.action == 'retrieve':
             return self.detail_serializer_class(*args, **kwargs)
-        elif self.action == 'change_password':
-            return self.change_password_serializer_class(*args, **kwargs)
         else:
             return self.serializer_class(*args, **kwargs)
 
@@ -61,30 +56,12 @@ class UsersViewSet(viewsets.ModelViewSet):
         """
         Set none active status to your account
         """
-        log_user_activity(request.user, last_request_IP=get_client_ip(request),
-                          last_request=timezone.now(), last_request_type='delete user')
 
         instance = self.get_object()
         instance.is_active = False
         instance.save()
         return Response({'status': 'success',
                          'message': 'Account is not active now'}, status=status.HTTP_200_OK)
-
-    def list(self, request, *args, **kwargs):
-        log_user_activity(request.user, last_request_IP=get_client_ip(request),
-                          last_request=timezone.now(), last_request_type='get users')
-
-        return super(UsersViewSet, self).list(request, *args, **kwargs)
-
-    def retrieve(self, request, *args, **kwargs):
-        """
-        If provided 'id' is "me" then return the current user.
-        """
-        log_user_activity(request.user, last_request_IP=get_client_ip(request),
-                          last_request=timezone.now(), last_request_type='get user')
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
 
     @action(methods=['POST'], detail=True, serializer_class=ChangePasswordSerializer,
             permission_classes=[IsAuthenticated, IsProfileOwnerOrAdmin])
@@ -102,15 +79,13 @@ class UsersViewSet(viewsets.ModelViewSet):
             instance.set_password(request.data['new_password'])
             instance.save()
 
-            log_user_activity(request.user, last_request_IP=get_client_ip(request),
-                              last_request=timezone.now(), last_request_type='password change')
-
             return Response({'status': 'success',
                              'message': 'Password updated successfully'})
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(methods=['GET'], detail=True, permission_classes=[IsAuthenticated, IsProfileOwnerOrAdmin])
+    @action(methods=['GET'], detail=True, permission_classes=[IsAuthenticated, IsProfileOwnerOrAdmin],
+            serializer_class=UserLastActivitySerializer)
     def activity(self, request, pk):
         """
         Shows when user was logged in last time and when he made last
@@ -120,14 +95,11 @@ class UsersViewSet(viewsets.ModelViewSet):
             pk = request.user.id
 
         try:
-            instance = UserLastActivity.objects.get(user=pk)
-            serializer = UserLastActivitySerializer(instance)
-        except UserLastActivity.DoesNotExist:
+            instance = User.objects.get(id=pk)
+            serializer = self.get_serializer(instance)
+        except User.DoesNotExist:
             return Response({'status': 'error',
                              'message': "User with this id doesn't exist"}, status=status.HTTP_404_NOT_FOUND)
-
-        log_user_activity(request.user, last_request_IP=get_client_ip(request),
-                          last_request=timezone.now(), last_request_type='get user activity')
 
         return Response(serializer.data)
 

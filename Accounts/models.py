@@ -1,12 +1,30 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.validators import UnicodeUsernameValidator
 import uuid
+
+
+class UsernameField(models.CharField):
+    def get_prep_value(self, value):
+        return str(value).lower()
+
+
+class UserEmailField(models.EmailField):
+    def get_prep_value(self, value):
+        return str(value).lower()
 
 
 class User(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    email = models.EmailField(unique=True)
-    last_login = None
+    email = UserEmailField(unique=True)
+    username = UsernameField(max_length=150, unique=True,
+                             help_text='Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.',
+                             error_messages={'unique': 'A user with that username already exists.'},
+                             validators=[UnicodeUsernameValidator()])
+    is_staff = models.BooleanField(default=False,
+                                   help_text='Designates whether the user is administrator of this site.',)
+    last_request = models.DateTimeField(null=True, blank=True, editable=False)
+    last_IP = models.GenericIPAddressField(null=True, blank=True, editable=False)
     first_name = None
     last_name = None
 
@@ -14,19 +32,7 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ['username', ]
 
     def __str__(self):
-        return self.username
+        return str(self.username).capitalize()
 
     class Meta:
         db_table = 'Users'
-
-
-class UserLastActivity(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, editable=False)
-    last_login = models.DateTimeField(editable=False, null=True, blank=True)
-    last_request = models.DateTimeField(editable=False)
-    last_request_type = models.CharField(max_length=30, editable=False)
-    last_request_IP = models.GenericIPAddressField(editable=False, null=True, blank=True)
-
-    class Meta:
-        db_table = 'Users_Last_Activities'
-        verbose_name_plural = 'Users Last Activities'
