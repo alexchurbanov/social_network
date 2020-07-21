@@ -3,7 +3,7 @@ from django.contrib.auth.hashers import make_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, PasswordField
 from django.contrib.auth.signals import user_logged_in
 
-from .models import User, UserLastActivity
+from .models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -31,8 +31,8 @@ class UserSerializer(serializers.ModelSerializer):
 class UserDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        exclude = ('password', 'is_superuser', 'is_active',
-                   'groups', 'user_permissions',)
+        fields = ('id', 'username', 'is_staff',
+                  'date_joined', 'email')
         extra_kwargs = {
             'date_joined': {'read_only': True},
             'is_staff': {'read_only': True},
@@ -57,8 +57,8 @@ class UserLoginSerializer(serializers.Serializer):
 
 class UserLastActivitySerializer(serializers.ModelSerializer):
     class Meta:
-        model = UserLastActivity
-        exclude = ('id', 'user')
+        model = User
+        fields = ('last_login', 'last_request', 'last_IP')
 
 
 class JWTObtainPairSerializer(TokenObtainPairSerializer):
