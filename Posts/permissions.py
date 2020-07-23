@@ -16,7 +16,7 @@ class IsPostOwnerOrAdmin(BasePermission):
             except (Post.DoesNotExist, ValidationError):
                 return True
 
-            if post.owner == request.user:
+            if post.author == request.user:
                 return True
             else:
                 return False
