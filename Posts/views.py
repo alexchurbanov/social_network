@@ -21,15 +21,15 @@ class PostViewSet(viewsets.ModelViewSet):
     filterset_class = PostsFilter
 
     search_fields = ('text', 'subject')
-    ordering_fields = ('likes', 'owner__username', 'subject', 'date_created', 'last_edit')
+    ordering_fields = ('likes', 'author__username', 'subject', 'date_created', 'last_edit')
 
     def get_queryset(self):
-        if self.action == 'owned_posts':
-            return Post.objects.filter(owner=self.request.user).order_by('id')
+        if self.action == 'published_posts':
+            return Post.objects.filter(author=self.request.user).order_by('id')
         elif self.action == 'favourite_posts':
             return Post.objects.filter(liked_by=self.request.user).order_by('id')
         else:
-            return Post.objects.all().order_by('-owner')
+            return Post.objects.all().order_by('-author')
 
     @action(methods=['POST'], detail=True, permission_classes=[IsAuthenticated])
     def like(self, request, *args, **kwargs):
@@ -77,7 +77,7 @@ class PostViewSet(viewsets.ModelViewSet):
         return super(PostViewSet, self).list(request, *args, **kwargs)
 
     @action(methods=['GET'], detail=False, permission_classes=[IsAuthenticated])
-    def owned_posts(self, request, *args, **kwargs):
+    def published_posts(self, request, *args, **kwargs):
         """
         List of published posts
         """

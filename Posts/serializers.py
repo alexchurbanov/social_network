@@ -3,8 +3,8 @@ from .models import Post
 
 
 class PostSerializer(serializers.ModelSerializer):
-    owner = serializers.HiddenField(default=serializers.CreateOnlyDefault(serializers.CurrentUserDefault()))
-    owner_username = serializers.CharField(source='owner.username', read_only=True)
+    author = serializers.HiddenField(default=serializers.CreateOnlyDefault(serializers.CurrentUserDefault()))
+    author_username = serializers.CharField(source='author.username', read_only=True)
     liked_by = serializers.StringRelatedField(many=True, read_only=True)
     is_liked = serializers.SerializerMethodField()
     likes = serializers.SerializerMethodField()

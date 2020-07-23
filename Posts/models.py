@@ -5,7 +5,7 @@ import uuid
 
 class Post(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    owner = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, editable=False, related_name='user')
+    author = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, editable=False, related_name='user')
     subject = models.CharField(max_length=50)
     text = models.TextField(max_length=300)
     date_published = models.DateTimeField(auto_now_add=True, editable=False)
