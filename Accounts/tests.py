@@ -8,7 +8,7 @@ class SignUpTest(APITestCase):
         self.test_user = User.objects.create_user(email='alexanderxchurbanov@gmail.com',
                                                   username='Test',
                                                   password='testpassword')
-        self.reg_url = '/users/'
+        self.reg_url = '/api/v1/users/'
 
     def test_valid_reg(self):
         data = {'email': 'alexanderx@gmail.com',
@@ -32,9 +32,9 @@ class LoginTest(APITestCase):
         self.test_user = User.objects.create_user(email=self.test_user_data['email'],
                                                   username='Test',
                                                   password=self.test_user_data['password'])
-        self.jwt_login_url = '/auth/jwt/create/'
-        self.login_url = '/auth/login/'
-        self.logout_url = '/auth/logout/'
+        self.jwt_login_url = '/api/v1/auth/jwt/create/'
+        self.login_url = '/api/v1/auth/login/'
+        self.logout_url = '/api/v1/auth/logout/'
 
     def test_login_logout(self):
         response = self.client.post(self.login_url, data=self.test_user_data, format='json')

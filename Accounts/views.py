@@ -65,7 +65,7 @@ class UsersViewSet(viewsets.ModelViewSet):
 
     @action(methods=['POST'], detail=True, serializer_class=ChangePasswordSerializer,
             permission_classes=[IsAuthenticated, IsProfileOwnerOrAdmin])
-    def change_password(self, request, pk):
+    def change_password(self, request, *args, **kwargs):
         """
         Change your password.
         """
@@ -86,20 +86,13 @@ class UsersViewSet(viewsets.ModelViewSet):
 
     @action(methods=['GET'], detail=True, permission_classes=[IsAuthenticated, IsProfileOwnerOrAdmin],
             serializer_class=UserLastActivitySerializer)
-    def activity(self, request, pk):
+    def activity(self, *args, **kwargs):
         """
         Shows when user was logged in last time and when he made last
         request to the service.
         """
-        if pk == 'me':
-            pk = request.user.id
-
-        try:
-            instance = User.objects.get(id=pk)
-            serializer = self.get_serializer(instance)
-        except User.DoesNotExist:
-            return Response({'status': 'error',
-                             'message': "User with this id doesn't exist"}, status=status.HTTP_404_NOT_FOUND)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
 
         return Response(serializer.data)
 
