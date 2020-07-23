@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Post, PostAnalytics
+from .models import Post
 
 
 class AdminPost(admin.ModelAdmin):
@@ -19,4 +19,3 @@ class AdminPostAnalytics(admin.ModelAdmin):
 
 
 admin.site.register(Post, AdminPost)
-admin.site.register(PostAnalytics, AdminPostAnalytics)

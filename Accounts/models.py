@@ -22,7 +22,7 @@ class User(AbstractUser):
                              error_messages={'unique': 'A user with that username already exists.'},
                              validators=[UnicodeUsernameValidator()])
     is_staff = models.BooleanField(default=False,
-                                   help_text='Designates whether the user is administrator of this site.',)
+                                   help_text='Designates whether the user is moderator of this site.',)
     last_request = models.DateTimeField(null=True, blank=True, editable=False)
     last_IP = models.GenericIPAddressField(null=True, blank=True, editable=False)
     first_name = None
@@ -32,7 +32,7 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ['username', ]
 
     def __str__(self):
-        return str(self.username).capitalize()
+        return str(self.username)
 
     class Meta:
         db_table = 'Users'
