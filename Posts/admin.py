@@ -5,7 +5,7 @@ from .models import Post
 class AdminPost(admin.ModelAdmin):
     search_fields = ('subject', 'text')
     list_display = ('id', 'author', 'subject', 'text', 'date_published', 'last_edit', 'likes')
-    list_filter = ('subject', 'author', 'liked_by')
+    list_filter = ('author', 'liked_by')
 
     def save_model(self, request, obj, form, change):
         if not change:
