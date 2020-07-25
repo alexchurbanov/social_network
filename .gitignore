@@ -133,3 +133,6 @@ dmypy.json
 /static/
 /.idea/
 migrations/
+
+#heroku bild
+heroku/
