@@ -83,7 +83,7 @@ class PostViewSet(viewsets.ModelViewSet):
         """
         return super(PostViewSet, self).list(request, *args, **kwargs)
 
-    @action(methods=['GET'], detail=True, url_name='Post Analytics')
+    @action(methods=['GET'], detail=True)
     def analytics(self, *args, **kwargs):
         """
         Analytics about how many likes were made and when
