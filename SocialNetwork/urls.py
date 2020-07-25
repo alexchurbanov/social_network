@@ -12,7 +12,7 @@ from Posts.views import PostViewSet
 schema_view = get_schema_view(
     title='Social Network',
     version='v1',
-    description='Simple REST API',
+    description='Django REST API for social network',
 )
 
 api_router = routers.DefaultRouter()

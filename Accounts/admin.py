@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 class CustomUserAdmin(UserAdmin):
     model = get_user_model()
     list_display = ('id', 'email', 'username', 'is_staff', 'is_superuser',
-                    'is_active')
+                    'is_active', 'date_joined', 'last_login')
     readonly_fields = ('date_joined', 'last_login',
                        'last_request', 'last_IP',)
     fieldsets = (
