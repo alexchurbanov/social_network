@@ -1,8 +1,8 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.filters import SearchFilter, OrderingFilter
-from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny
 from django_filters import rest_framework as filters
 
 from .models import Post, PostLikes
@@ -83,7 +83,7 @@ class PostViewSet(viewsets.ModelViewSet):
         """
         return super(PostViewSet, self).list(request, *args, **kwargs)
 
-    @action(methods=['GET'], detail=True)
+    @action(methods=['GET'], detail=True, permission_classes=[AllowAny])
     def analytics(self, *args, **kwargs):
         """
         Analytics about how many likes were made and when
@@ -98,3 +98,44 @@ class PostViewSet(viewsets.ModelViewSet):
             response['likes_per_day'][date.strftime("%Y-%m-%d")] = likes
 
         return Response(response)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny, ])
+def posts_analytics_view(request, *args, **kwargs):
+    """
+    Analytics about how many likes were made
+    """
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    if date_from and date_to:
+        queryset = PostLikes.objects.filter(created__gte=date_from, created__lte=date_to)
+    elif date_from:
+        queryset = PostLikes.objects.filter(created__gte=date_from)
+    elif date_to:
+        queryset = PostLikes.objects.filter(created__lte=date_to)
+    else:
+        queryset = PostLikes.objects.all()
+
+    dates = queryset.values_list('created', flat=True).distinct('created')
+
+    response = []
+
+    for date in dates:
+        date_string = date.strftime("%Y-%m-%d")
+        total_likes = queryset.filter(created=date).count()
+
+        post_of_the_day = []
+        most_likes = 0
+        posts = queryset.filter(created=date).distinct('post')
+        for post in posts:
+            likes = queryset.filter(post=post.post, created=date).count()
+            if likes >= most_likes:
+                most_likes = likes
+                post_of_the_day.append(post.post.id)
+
+        response.append({'date': date_string,
+                         'total_likes': total_likes,
+                         'top_posts': post_of_the_day})
+
+    return Response(response)
