@@ -1,14 +1,14 @@
 from rest_framework import viewsets, status
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
 from django.contrib.auth import authenticate, login, logout
 from rest_framework.filters import SearchFilter, OrderingFilter
 from django_filters import rest_framework as filters
 
-from .serializers import (UserSerializer, JWTObtainPairSerializer, UserLoginSerializer,
+from .serializers import (UserSerializer, JWTObtainPairSerializer, JWTRefreshSerializer, UserLoginSerializer,
                           UserDetailSerializer, ChangePasswordSerializer, UserLastActivitySerializer)
 from .models import User
 from .filters import UsersFilter
@@ -102,6 +102,13 @@ class JWTObtainPairView(TokenObtainPairView):
     JWT login. Take user credentials and return refresh and access JWT
     """
     serializer_class = JWTObtainPairSerializer
+
+
+class JWTRefreshView(TokenRefreshView):
+    """
+    JWT refresh. Take refresh token and return new access token
+    """
+    serializer_class = JWTRefreshSerializer
 
 
 class LoginView(GenericAPIView):
