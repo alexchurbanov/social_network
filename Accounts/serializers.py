@@ -1,7 +1,10 @@
 from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, PasswordField
+from rest_framework_simplejwt.settings import api_settings
+from rest_framework_simplejwt.serializers import (TokenObtainPairSerializer, PasswordField,
+                                                  TokenRefreshSerializer)
 from django.contrib.auth.signals import user_logged_in
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User
 
@@ -63,6 +66,45 @@ class UserLastActivitySerializer(serializers.ModelSerializer):
 
 class JWTObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
-        data = super(JWTObtainPairSerializer, self).validate(attrs)
+        data = super().validate(attrs)
+
+        refresh = self.get_token(self.user)
+        access = refresh.access_token
+
+        data['refresh'] = str(refresh)
+        data['access'] = str(access)
+        data['exp_date'] = {
+                               'refresh': refresh['exp'],
+                               'access': access['exp']
+        }
+        data['user'] = self.user.username
+
         user_logged_in.send(self.user.__class__, user=self.user, request=self.context['request'])
+        return data
+
+
+class JWTRefreshSerializer(TokenRefreshSerializer):
+    def validate(self, attrs):
+        refresh = RefreshToken(attrs['refresh'])
+        access = refresh.access_token
+
+        data = {'access': str(access), 'exp_date': {}}
+        data['exp_date']['access'] = access['exp']
+
+        if api_settings.ROTATE_REFRESH_TOKENS:
+            if api_settings.BLACKLIST_AFTER_ROTATION:
+                try:
+                    # Attempt to blacklist the given refresh token
+                    refresh.blacklist()
+                except AttributeError:
+                    # If blacklist app not installed, `blacklist` method will
+                    # not be present
+                    pass
+
+            refresh.set_jti()
+            refresh.set_exp()
+
+            data['refresh'] = str(refresh)
+            data['exp_date']['refresh'] = refresh['exp']
+
         return data
