@@ -106,8 +106,8 @@ def posts_analytics_view(request, *args, **kwargs):
     """
     Analytics about how many likes were made
     """
-    date_from = request.GET.get('date_from', '')
-    date_to = request.GET.get('date_to', '')
+    date_from = request.query_params.get('date_from', '')
+    date_to = request.query_params.get('date_to', '')
     if date_from and date_to:
         queryset = PostLikes.objects.filter(created__gte=date_from, created__lte=date_to)
     elif date_from:
@@ -127,12 +127,12 @@ def posts_analytics_view(request, *args, **kwargs):
 
         post_of_the_day = []
         most_likes = 0
-        posts = queryset.filter(created=date).distinct('post')
-        for post in posts:
-            likes = queryset.filter(post=post.post, created=date).count()
+        posts_likes = queryset.filter(created=date).distinct('post')
+        for instance in posts_likes:
+            likes = queryset.filter(post=instance.post, created=date).count()
             if likes >= most_likes:
                 most_likes = likes
-                post_of_the_day.append(post.post.id)
+                post_of_the_day.append(instance.post.id)
 
         response.append({'date': date_string,
                          'total_likes': total_likes,
