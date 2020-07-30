@@ -125,17 +125,21 @@ def posts_analytics_view(request, *args, **kwargs):
         date_string = date.strftime("%Y-%m-%d")
         total_likes = queryset.filter(created=date).count()
 
-        post_of_the_day = []
+        top_posts = []
         most_likes = 0
         posts_likes = queryset.filter(created=date).distinct('post')
         for instance in posts_likes:
             likes = queryset.filter(post=instance.post, created=date).count()
             if likes >= most_likes:
-                most_likes = likes
-                post_of_the_day.append(instance.post.id)
+                if most_likes == likes:
+                    top_posts.append(instance.post.id)
+                else:
+                    most_likes = likes
+                    top_posts = [instance.post.id]
 
         response.append({'date': date_string,
                          'total_likes': total_likes,
-                         'top_posts': post_of_the_day})
+                         'most_likes': most_likes,
+                         'top_posts': top_posts})
 
     return Response(response)
