@@ -17,7 +17,7 @@ from .permissions import IsProfileOwnerOrAdmin
 
 class UsersViewSet(viewsets.ModelViewSet):
     """
-    List of active users
+    CRUD operations with active users
     """
     serializer_class = UserSerializer
     detail_serializer_class = UserDetailSerializer

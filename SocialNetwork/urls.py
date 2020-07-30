@@ -5,7 +5,7 @@ from django.views.generic import TemplateView
 from rest_framework.schemas import get_schema_view
 
 from Accounts.views import UsersViewSet
-from Posts.views import PostViewSet, posts_analytics_view
+from Posts.views import PostViewSet, PostAnalyticsViewSet
 
 
 schema_view = get_schema_view(
@@ -17,12 +17,12 @@ schema_view = get_schema_view(
 api_router = routers.DefaultRouter()
 api_router.register('posts', PostViewSet, basename='posts')
 api_router.register('users', UsersViewSet, basename='users')
+api_router.register('analytics', PostAnalyticsViewSet, basename='analytics')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/', include(api_router.urls)),
     path('api/v1/auth/', include('Accounts.urls')),
-    path('api/v1/analytics/', posts_analytics_view, name='analytics'),
     path('openapi/', schema_view, name='openapi-schema'),
     path('', TemplateView.as_view(
         template_name='swagger.html',
