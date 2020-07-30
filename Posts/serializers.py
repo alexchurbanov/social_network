@@ -21,3 +21,10 @@ class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = '__all__'
+
+
+class PostAnalytics(serializers.Serializer):
+    date = serializers.DateField()
+    total_likes = serializers.IntegerField()
+    most_likes = serializers.IntegerField()
+    top_posts = serializers.ListField()

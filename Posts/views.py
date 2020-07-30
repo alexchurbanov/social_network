@@ -1,12 +1,12 @@
-from rest_framework import viewsets, mixins
+from rest_framework import viewsets, mixins, status
 from rest_framework.response import Response
 from rest_framework.filters import SearchFilter, OrderingFilter
-from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny
 from django_filters import rest_framework as filters
 
 from .models import Post, PostLikes
-from .serializers import PostSerializer
+from .serializers import PostSerializer, PostAnalytics
 from .filters import PostsFilter, DateRangePostLikesFilter
 from .permissions import IsPostOwnerOrAdmin
 
@@ -113,6 +113,7 @@ class PostAnalyticsViewSet(viewsets.GenericViewSet,
     permission_classes = [AllowAny]
     filter_backends = [DateRangePostLikesFilter]
     queryset = PostLikes.objects.all()
+    serializer_class = PostAnalytics
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.queryset)
@@ -141,7 +142,11 @@ class PostAnalyticsViewSet(viewsets.GenericViewSet,
                              'most_likes': most_likes,
                              'top_posts': top_posts})
 
-        page = self.paginate_queryset(response)
-        if page is not None:
-            return self.get_paginated_response(page)
-        return Response(response)
+        serializer = self.serializer_class(data=response, many=True)
+        if serializer.is_valid():
+            page = self.paginate_queryset(serializer.data)
+            if page is not None:
+                return self.get_paginated_response(page)
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors)
