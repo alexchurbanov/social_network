@@ -28,3 +28,8 @@ class PostAnalytics(serializers.Serializer):
     total_likes = serializers.IntegerField()
     most_likes = serializers.IntegerField()
     top_posts = serializers.ListField()
+
+
+class PostInstanceAnalytics(serializers.Serializer):
+    date = serializers.DateField()
+    likes = serializers.IntegerField()

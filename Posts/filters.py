@@ -1,3 +1,6 @@
+import coreapi
+import coreschema
+from django.utils.encoding import force_str
 from django_filters import rest_framework as filters
 from rest_framework.filters import BaseFilterBackend
 
@@ -28,3 +31,51 @@ class DateRangePostLikesFilter(BaseFilterBackend):
             queryset = queryset.filter(created__lte=date_to)
 
         return queryset
+
+    def get_schema_fields(self, view):
+        assert coreapi is not None, 'coreapi must be installed to use `get_schema_fields()`'
+        assert coreschema is not None, 'coreschema must be installed to use `get_schema_fields()`'
+        return [
+            coreapi.Field(
+                name='date_from',
+                required=False,
+                location='query',
+                schema=coreschema.String(
+                    title='Date from',
+                    description='Date where search starts'
+                )
+            ),
+            coreapi.Field(
+                name='date_to',
+                required=False,
+                location='query',
+                schema=coreschema.String(
+                    title='Date to',
+                    description='Date where search ends'
+                )
+            ),
+        ]
+
+    def get_schema_operation_parameters(self, view):
+        return [
+            {
+                'name': 'date_from',
+                'required': False,
+                'in': 'query',
+                'description': 'Date where search starts',
+                'schema': {
+                    'type': 'string',
+                    'format': 'date'
+                },
+            },
+            {
+                'name': 'date_to',
+                'required': False,
+                'in': 'query',
+                'description': 'Date where search ends',
+                'schema': {
+                    'type': 'string',
+                    'format': 'date'
+                },
+            },
+        ]
