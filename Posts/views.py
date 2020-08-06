@@ -6,15 +6,17 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 from django_filters import rest_framework as filters
 
 from .models import Post, PostLikes
-from .serializers import PostSerializer, PostAnalytics
+from .serializers import PostSerializer, PostAnalytics, PostInstanceAnalytics
 from .filters import PostsFilter, DateRangePostLikesFilter
 from .permissions import IsPostOwnerOrAdmin
+from .schemas import PostsSchema
 
 
 class PostViewSet(viewsets.ModelViewSet):
     """
     CRUD operations with posts
     """
+    schema = PostsSchema()
     permission_classes = (IsAuthenticatedOrReadOnly, IsPostOwnerOrAdmin)
     serializer_class = PostSerializer
     filter_backends = (SearchFilter, OrderingFilter, filters.DjangoFilterBackend)
@@ -84,7 +86,8 @@ class PostViewSet(viewsets.ModelViewSet):
         return super(PostViewSet, self).list(request, *args, **kwargs)
 
     @action(methods=['GET'], detail=True, permission_classes=[AllowAny],
-            filter_backends=[DateRangePostLikesFilter])
+            filter_backends=[DateRangePostLikesFilter],
+            serializer_class=PostInstanceAnalytics)
     def analytics(self, request, pk, *args, **kwargs):
         """
         Analytics about how many likes were made to this post
@@ -142,11 +145,7 @@ class PostAnalyticsViewSet(viewsets.GenericViewSet,
                              'most_likes': most_likes,
                              'top_posts': top_posts})
 
-        serializer = self.serializer_class(data=response, many=True)
-        if serializer.is_valid():
-            page = self.paginate_queryset(serializer.data)
-            if page is not None:
-                return self.get_paginated_response(page)
-            return Response(serializer.data)
-        else:
-            return Response(serializer.errors)
+        page = self.paginate_queryset(response)
+        if page is not None:
+            return self.get_paginated_response(page)
+        return Response(response)
