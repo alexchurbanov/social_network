@@ -1,4 +1,3 @@
-from rest_framework.mixins import RetrieveModelMixin
 from rest_framework.schemas.openapi import AutoSchema
 
 
@@ -28,9 +27,9 @@ class PostsSchema(AutoSchema):
                 '200': {
                     'content': {
                         ct: {'schema': {'properties': {
-                            'id': {'type': 'string', 'format': 'uuid', 'readOnly': True},
-                            'status': {'type': 'string', 'readOnly': True},
-                            'message': {'type': 'string', 'readOnly': True}}}}
+                             'id': {'type': 'string', 'format': 'uuid', 'readOnly': True},
+                             'status': {'type': 'string', 'readOnly': True},
+                             'message': {'type': 'string', 'readOnly': True}}}}
                         for ct in self.response_media_types
                     },
                     'description': ""

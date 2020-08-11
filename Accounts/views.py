@@ -1,8 +1,8 @@
 from rest_framework import viewsets, status
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from rest_framework.decorators import api_view, permission_classes, action
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenVerifyView
+from rest_framework.decorators import api_view, permission_classes, action, schema
 from rest_framework.response import Response
 from django.contrib.auth import authenticate, login, logout
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -13,12 +13,23 @@ from .serializers import (UserSerializer, JWTObtainPairSerializer, JWTRefreshSer
 from .models import User
 from .filters import UsersFilter
 from .permissions import IsProfileOwnerOrAdmin
+from .schemas import UsersSchema, AuthSchema
 
 
 class UsersViewSet(viewsets.ModelViewSet):
     """
-    CRUD operations with active users
+    CRUD operations with active user
+    retrieve:
+    Return a user instance.
+    You can pass id 'me' if you want to return self
+    update:
+    Return a user instance.
+    You can pass id 'me' if you want to return self
+    partial_update:
+    Return a user instance.
+    You can pass id 'me' if you want to return self
     """
+    schema = UsersSchema()
     serializer_class = UserSerializer
     detail_serializer_class = UserDetailSerializer
     change_password_serializer_class = ChangePasswordSerializer
@@ -99,16 +110,25 @@ class UsersViewSet(viewsets.ModelViewSet):
 
 class JWTObtainPairView(TokenObtainPairView):
     """
-    JWT login. Take user credentials and return refresh and access JWT
+    Takes user credentials and return refresh and access JWT
     """
     serializer_class = JWTObtainPairSerializer
+    schema = AuthSchema()
 
 
 class JWTRefreshView(TokenRefreshView):
     """
-    JWT refresh. Take refresh token and return new access token
+    Takes refresh token and return new access token
     """
     serializer_class = JWTRefreshSerializer
+    schema = AuthSchema()
+
+
+class JWTVerifyView(TokenVerifyView):
+    """
+    Takes token and check if it is valid
+    """
+    schema = AuthSchema()
 
 
 class LoginView(GenericAPIView):
@@ -117,6 +137,7 @@ class LoginView(GenericAPIView):
     """
     serializer_class = UserLoginSerializer
     permission_classes = (AllowAny,)
+    schema = AuthSchema()
 
     def post(self, request, *args, **kwargs):
 
@@ -140,6 +161,7 @@ class LoginView(GenericAPIView):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated, ])
+@schema(AuthSchema())
 def logout_view(request):
     """
     Logout for authenticated users that using session.
