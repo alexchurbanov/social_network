@@ -10,10 +10,23 @@ from .models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
+    is_friends = serializers.SerializerMethodField()
+
+    def get_is_friends(self, obj):
+        user = self.context.get('request').user
+        if user.is_anonymous:
+            return False
+
+        friends = user.friends.filter(friend=obj)
+        if friends:
+            return True
+        else:
+            return False
+
     class Meta:
         model = User
-        fields = ('email', 'username',
-                  'password', 'date_joined', 'is_staff')
+        fields = ('id', 'email', 'username',
+                  'password', 'date_joined', 'is_staff', 'is_friends')
         extra_kwargs = {
             'password': {'write_only': True,
                          'style': {'input_type': 'password'}},
@@ -32,10 +45,15 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserDetailSerializer(serializers.ModelSerializer):
+    friends = serializers.SerializerMethodField()
+
+    def get_friends(self, obj):
+        return obj.friends.values('friend', 'created')
+
     class Meta:
         model = User
         fields = ('id', 'username', 'is_staff',
-                  'date_joined', 'email')
+                  'date_joined', 'email', 'friends')
         extra_kwargs = {
             'date_joined': {'read_only': True},
             'is_staff': {'read_only': True},

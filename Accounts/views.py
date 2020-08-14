@@ -10,7 +10,7 @@ from django_filters import rest_framework as filters
 
 from .serializers import (UserSerializer, JWTObtainPairSerializer, JWTRefreshSerializer, UserLoginSerializer,
                           UserDetailSerializer, ChangePasswordSerializer, UserLastActivitySerializer)
-from .models import User
+from .models import User, UserFriends
 from .filters import UsersFilter
 from .permissions import IsProfileOwnerOrAdmin
 from .schemas import UsersSchema, AuthSchema
@@ -94,6 +94,36 @@ class UsersViewSet(viewsets.ModelViewSet):
                              'message': 'Password updated successfully'})
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(methods=['POST'], detail=True, permission_classes=[IsAuthenticated])
+    def add_friend(self, request, pk, *args, **kwargs):
+        if pk == 'me' or pk == request.user.id:
+            return Response({'status': 'error',
+                             'message': "you can't befriend yourself"})
+
+        friends = UserFriends.objects.get_or_create(user=request.user, friend_id=pk)
+
+        if friends[1]:
+            return Response({'status': 'success',
+                             'message': 'friend added'})
+        else:
+            return Response({'status': 'error',
+                             'message': 'user already your friend'})
+
+    @action(methods=['POST'], detail=True, permission_classes=[IsAuthenticated])
+    def remove_friend(self, request, pk, *args, **kwargs):
+        if pk == 'me' or pk == request.user.id:
+            return Response({'status': 'error',
+                             'message': "you can't remove yourself from friends"})
+
+        friends = UserFriends.objects.filter(user=request.user, friend_id=pk).delete()
+
+        if friends[0]:
+            return Response({'status': 'success',
+                             'message': 'friend removed'})
+        else:
+            return Response({'status': 'error',
+                             'message': 'user is not your friend'})
 
     @action(methods=['GET'], detail=True, permission_classes=[IsAuthenticated, IsProfileOwnerOrAdmin],
             serializer_class=UserLastActivitySerializer)

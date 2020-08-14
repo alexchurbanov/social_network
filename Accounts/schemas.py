@@ -2,6 +2,11 @@ from rest_framework.schemas.openapi import AutoSchema
 
 
 class UsersSchema(AutoSchema):
+    def _get_request_body(self, path, method):
+        if self.view.action in ['add_friend', 'remove_friend']:
+            return {}
+        return super(UsersSchema, self)._get_request_body(path, method)
+
     def _get_responses(self, path, method):
         if self.view.action == 'change_password':
             return {
@@ -11,6 +16,17 @@ class UsersSchema(AutoSchema):
                              'status': {'type': 'string', 'readOnly': True},
                              'message': {'type': 'string', 'readOnly': True}}}}
                         for ct in self.response_media_types
+                    },
+                    'description': ""
+                }
+            }
+        elif self.view.action in ['add_friend', 'remove_friend']:
+            return {
+                '200': {
+                    'content': {
+                        'application/json': {'schema': {'properties': {
+                            'status': {'type': 'string', 'readOnly': True},
+                            'message': {'type': 'string', 'readOnly': True}}}}
                     },
                     'description': ""
                 }

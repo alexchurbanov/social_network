@@ -28,6 +28,10 @@ class User(AbstractUser):
     first_name = None
     last_name = None
 
+    @property
+    def friends(self):
+        return UserFriends.objects.filter(user=self.id)
+
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', ]
 
@@ -36,3 +40,12 @@ class User(AbstractUser):
 
     class Meta:
         db_table = 'Users'
+
+
+class UserFriends(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_id')
+    friend = models.OneToOneField(User, on_delete=models.CASCADE, related_name='friend_id')
+    created = models.DateField(auto_now_add=True, editable=False)
+
+    class Meta:
+        db_table = 'Users_friends'
