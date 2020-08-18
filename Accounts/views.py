@@ -10,7 +10,7 @@ from django_filters import rest_framework as filters
 
 from .serializers import (UserSerializer, JWTObtainPairSerializer, JWTRefreshSerializer, UserLoginSerializer,
                           UserDetailSerializer, ChangePasswordSerializer, UserLastActivitySerializer)
-from .models import User
+from .models import User, UserFriends
 from .filters import UsersFilter
 from .permissions import IsProfileOwnerOrAdmin
 from .schemas import UsersSchema, AuthSchema
@@ -94,6 +94,92 @@ class UsersViewSet(viewsets.ModelViewSet):
                              'message': 'Password updated successfully'})
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(methods=['POST'], detail=True, permission_classes=[IsAuthenticated])
+    def add_friend(self, request, pk, *args, **kwargs):
+        """Add user to your friend list"""
+
+        if pk == 'me' or pk == request.user.id:
+            return Response({'status': 'error',
+                             'message': "you can't befriend yourself"})
+
+        friends = UserFriends.objects.get_or_create(user=request.user, friend_id=pk)
+
+        if friends[1]:
+            return Response({'status': 'success',
+                             'message': 'friend added'})
+        else:
+            return Response({'status': 'error',
+                             'message': 'user already your friend'})
+
+    @action(methods=['POST'], detail=True, permission_classes=[IsAuthenticated])
+    def remove_friend(self, request, pk, *args, **kwargs):
+        """Remove user from your friend list"""
+
+        if pk == 'me' or pk == request.user.id:
+            return Response({'status': 'error',
+                             'message': "you can't remove yourself from friends"})
+
+        friends = UserFriends.objects.filter(user=request.user, friend_id=pk).delete()
+
+        if friends[0]:
+            return Response({'status': 'success',
+                             'message': 'friend removed'})
+        else:
+            return Response({'status': 'error',
+                             'message': 'user is not your friend'})
+
+    def _filter_serializer(self, serializer, filter_key):
+        data = []
+        for user in serializer.data:
+            if user[filter_key]:
+                data.append(user)
+        return data
+
+    @action(methods=['GET'], detail=False, permission_classes=[IsAuthenticated])
+    def friends(self, *args, **kwargs):
+        """List of users that you follow and that follow you"""
+        queryset = self.filter_queryset(self.get_queryset())
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            data = self._filter_serializer(serializer, 'is_friends')
+            return self.get_paginated_response(data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        data = self._filter_serializer(serializer, 'is_friends')
+        return Response(data)
+
+    @action(methods=['GET'], detail=False, permission_classes=[IsAuthenticated])
+    def followers(self, *args, **kwargs):
+        """List of users that follow you"""
+        queryset = self.filter_queryset(self.get_queryset())
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            data = self._filter_serializer(serializer, 'is_follower')
+            return self.get_paginated_response(data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        data = self._filter_serializer(serializer, 'is_follower')
+        return Response(data)
+
+    @action(methods=['GET'], detail=False, permission_classes=[IsAuthenticated])
+    def followed(self, *args, **kwargs):
+        """List of users that you follow"""
+        queryset = self.filter_queryset(self.get_queryset())
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            data = self._filter_serializer(serializer, 'is_followed')
+            return self.get_paginated_response(data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        data = self._filter_serializer(serializer, 'is_followed')
+        return Response(data)
 
     @action(methods=['GET'], detail=True, permission_classes=[IsAuthenticated, IsProfileOwnerOrAdmin],
             serializer_class=UserLastActivitySerializer)
