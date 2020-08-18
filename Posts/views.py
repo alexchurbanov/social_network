@@ -88,7 +88,7 @@ class PostViewSet(viewsets.ModelViewSet):
     @action(methods=['GET'], detail=True, permission_classes=[AllowAny],
             filter_backends=[DateRangePostLikesFilter],
             serializer_class=PostInstanceAnalytics)
-    def analytics(self, request, pk, *args, **kwargs):
+    def analytics(self, pk, *args, **kwargs):
         """
         Analytics about how many likes were made to this post
         """

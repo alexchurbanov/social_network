@@ -2,6 +2,18 @@ from rest_framework.schemas.openapi import AutoSchema
 
 
 class UsersSchema(AutoSchema):
+    def _allows_filters(self, path, method):
+        if self.view.action in ['followers', 'followed', 'friends']:
+            return True
+        return super(UsersSchema, self)._allows_filters(path, method)
+
+    def _get_pagination_parameters(self, path, method):
+        view = self.view
+        if view.action in ['followers', 'followed', 'friends']:
+            paginator = self._get_paginator()
+            return paginator.get_schema_operation_parameters(view)
+        return super(UsersSchema, self)._get_pagination_parameters(path, method)
+
     def _get_request_body(self, path, method):
         if self.view.action in ['add_friend', 'remove_friend']:
             return {}
@@ -27,6 +39,23 @@ class UsersSchema(AutoSchema):
                         'application/json': {'schema': {'properties': {
                             'status': {'type': 'string', 'readOnly': True},
                             'message': {'type': 'string', 'readOnly': True}}}}
+                    },
+                    'description': ""
+                }
+            }
+        elif self.view.action in ['followers', 'followed', 'friends']:
+            response = super(UsersSchema, self)._get_responses(path, method)
+            response_schema = {
+                'type': 'array',
+                'items': response['200']['content']['application/json']['schema'],
+            }
+            paginator = self._get_paginator()
+            response_schema = paginator.get_paginated_response_schema(response_schema)
+            return {
+                '200': {
+                    'content': {
+                        ct: {'schema': response_schema}
+                        for ct in self.response_media_types
                     },
                     'description': ""
                 }
