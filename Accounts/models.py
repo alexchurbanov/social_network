@@ -49,3 +49,4 @@ class UserFriends(models.Model):
 
     class Meta:
         db_table = 'Users_friends'
+        unique_together = ('user', 'friend')
