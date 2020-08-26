@@ -33,3 +33,4 @@ class PostLikes(models.Model):
 
     class Meta:
         db_table = 'Posts_likes'
+        unique_together = ('user', 'post')
