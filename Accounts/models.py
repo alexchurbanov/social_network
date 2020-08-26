@@ -44,7 +44,7 @@ class User(AbstractUser):
 
 class UserFriends(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_id')
-    friend = models.OneToOneField(User, on_delete=models.CASCADE, related_name='friend_id')
+    friend = models.ForeignKey(User, on_delete=models.CASCADE, related_name='friend_id')
     created = models.DateField(auto_now_add=True, editable=False)
 
     class Meta:
