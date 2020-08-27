@@ -136,49 +136,41 @@ class UsersViewSet(viewsets.ModelViewSet):
                 data.append(user)
         return data
 
-    @action(methods=['GET'], detail=False, permission_classes=[IsAuthenticated])
-    def friends(self, *args, **kwargs):
-        """List of users that you follow and that follow you"""
+    def _list_response(self, serializer_filter):
         queryset = self.filter_queryset(self.get_queryset())
 
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
-            data = self._filter_serializer(serializer, 'is_friends')
+            data = self._filter_serializer(serializer, serializer_filter)
             return self.get_paginated_response(data)
 
         serializer = self.get_serializer(queryset, many=True)
-        data = self._filter_serializer(serializer, 'is_friends')
+        data = self._filter_serializer(serializer, serializer_filter)
+        return data
+
+    @action(methods=['GET'], detail=False, permission_classes=[IsAuthenticated])
+    def friends(self, *args, **kwargs):
+        """List of users that you follow and that follow you"""
+        data = self._list_response(serializer_filter='is_friends')
+        if hasattr(data, 'status_code'):
+            return data
         return Response(data)
 
     @action(methods=['GET'], detail=False, permission_classes=[IsAuthenticated])
     def followers(self, *args, **kwargs):
         """List of users that follow you"""
-        queryset = self.filter_queryset(self.get_queryset())
-
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            data = self._filter_serializer(serializer, 'is_follower')
-            return self.get_paginated_response(data)
-
-        serializer = self.get_serializer(queryset, many=True)
-        data = self._filter_serializer(serializer, 'is_follower')
+        data = self._list_response(serializer_filter='is_follower')
+        if hasattr(data, 'status_code'):
+            return data
         return Response(data)
 
     @action(methods=['GET'], detail=False, permission_classes=[IsAuthenticated])
     def followed(self, *args, **kwargs):
         """List of users that you follow"""
-        queryset = self.filter_queryset(self.get_queryset())
-
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            data = self._filter_serializer(serializer, 'is_followed')
-            return self.get_paginated_response(data)
-
-        serializer = self.get_serializer(queryset, many=True)
-        data = self._filter_serializer(serializer, 'is_followed')
+        data = self._list_response(serializer_filter='is_followed')
+        if hasattr(data, 'status_code'):
+            return data
         return Response(data)
 
     @action(methods=['GET'], detail=True, permission_classes=[IsAuthenticated, IsProfileOwnerOrAdmin],
