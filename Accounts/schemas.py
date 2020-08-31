@@ -2,24 +2,24 @@ from rest_framework.schemas.openapi import AutoSchema
 
 
 class UsersSchema(AutoSchema):
-    def _allows_filters(self, path, method):
+    def allows_filters(self, path, method):
         if self.view.action in ['followers', 'followed', 'friends']:
             return True
-        return super(UsersSchema, self)._allows_filters(path, method)
+        return super(UsersSchema, self).allows_filters(path, method)
 
-    def _get_pagination_parameters(self, path, method):
+    def get_pagination_parameters(self, path, method):
         view = self.view
         if view.action in ['followers', 'followed', 'friends']:
-            paginator = self._get_paginator()
+            paginator = self.get_paginator()
             return paginator.get_schema_operation_parameters(view)
-        return super(UsersSchema, self)._get_pagination_parameters(path, method)
+        return super(UsersSchema, self).get_pagination_parameters(path, method)
 
-    def _get_request_body(self, path, method):
+    def get_request_body(self, path, method):
         if self.view.action in ['add_friend', 'remove_friend']:
             return {}
-        return super(UsersSchema, self)._get_request_body(path, method)
+        return super(UsersSchema, self).get_request_body(path, method)
 
-    def _get_responses(self, path, method):
+    def get_responses(self, path, method):
         if self.view.action == 'change_password':
             return {
                 '200': {
@@ -44,12 +44,12 @@ class UsersSchema(AutoSchema):
                 }
             }
         elif self.view.action in ['followers', 'followed', 'friends']:
-            response = super(UsersSchema, self)._get_responses(path, method)
+            response = super(UsersSchema, self).get_responses(path, method)
             response_schema = {
                 'type': 'array',
                 'items': response['200']['content']['application/json']['schema'],
             }
-            paginator = self._get_paginator()
+            paginator = self.get_paginator()
             response_schema = paginator.get_paginated_response_schema(response_schema)
             return {
                 '200': {
@@ -60,11 +60,11 @@ class UsersSchema(AutoSchema):
                     'description': ""
                 }
             }
-        return super(UsersSchema, self)._get_responses(path, method)
+        return super(UsersSchema, self).get_responses(path, method)
 
 
 class AuthSchema(AutoSchema):
-    def _get_responses(self, path, method):
+    def get_responses(self, path, method):
         if path in ['/api/v1/auth/login/', '/api/v1/auth/logout/']:
             return {
                 '200': {
@@ -122,4 +122,4 @@ class AuthSchema(AutoSchema):
                     'description': ""
                 }
             }
-        return super(AuthSchema, self)._get_responses(path, method)
+        return super(AuthSchema, self).get_responses(path, method)

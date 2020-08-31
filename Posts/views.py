@@ -4,6 +4,7 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny
 from django_filters import rest_framework as filters
+from rest_framework.schemas.openapi import AutoSchema
 
 from .models import Post, PostLikes
 from .serializers import PostSerializer, PostAnalytics, PostInstanceAnalytics
@@ -16,7 +17,7 @@ class PostViewSet(viewsets.ModelViewSet):
     """
     CRUD operations with posts
     """
-    schema = PostsSchema()
+    schema = PostsSchema(tags=['posts'])
     permission_classes = (IsAuthenticatedOrReadOnly, IsPostOwnerOrAdmin)
     serializer_class = PostSerializer
     filter_backends = (SearchFilter, OrderingFilter, filters.DjangoFilterBackend)
@@ -117,6 +118,7 @@ class PostAnalyticsViewSet(viewsets.GenericViewSet,
     filter_backends = [DateRangePostLikesFilter]
     queryset = PostLikes.objects.all()
     serializer_class = PostAnalytics
+    schema = AutoSchema(tags=['analytics'])
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.queryset)
