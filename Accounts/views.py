@@ -29,7 +29,7 @@ class UsersViewSet(viewsets.ModelViewSet):
     Return a user instance.
     You can pass id 'me' if you want to return self
     """
-    schema = UsersSchema()
+    schema = UsersSchema(tags=['users'])
     serializer_class = UserSerializer
     detail_serializer_class = UserDetailSerializer
     change_password_serializer_class = ChangePasswordSerializer
@@ -191,7 +191,7 @@ class JWTObtainPairView(TokenObtainPairView):
     Takes user credentials and return refresh and access JWT
     """
     serializer_class = JWTObtainPairSerializer
-    schema = AuthSchema()
+    schema = AuthSchema(tags=['auth'])
 
 
 class JWTRefreshView(TokenRefreshView):
@@ -199,14 +199,14 @@ class JWTRefreshView(TokenRefreshView):
     Takes refresh token and return new access token
     """
     serializer_class = JWTRefreshSerializer
-    schema = AuthSchema()
+    schema = AuthSchema(tags=['auth'])
 
 
 class JWTVerifyView(TokenVerifyView):
     """
     Takes token and check if it is valid
     """
-    schema = AuthSchema()
+    schema = AuthSchema(tags=['auth'])
 
 
 class LoginView(GenericAPIView):
@@ -215,7 +215,7 @@ class LoginView(GenericAPIView):
     """
     serializer_class = UserLoginSerializer
     permission_classes = (AllowAny,)
-    schema = AuthSchema()
+    schema = AuthSchema(tags=['auth'])
 
     def post(self, request, *args, **kwargs):
 
@@ -239,7 +239,7 @@ class LoginView(GenericAPIView):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated, ])
-@schema(AuthSchema())
+@schema(AuthSchema(tags=['auth']))
 def logout_view(request):
     """
     Logout for authenticated users that using session.

@@ -6,11 +6,12 @@ coreschema==0.0.4
 Django==3.0.8
 django-crispy-forms==1.9.1
 django-filter==2.3.0
-djangorestframework==3.11.0
+djangorestframework==3.11.1
 djangorestframework-simplejwt==4.4.0
 idna==2.10
 itypes==1.2.0
 Jinja2==2.11.2
+Markdown==3.2.2
 MarkupSafe==1.1.1
 psycopg2==2.8.5
 PyJWT==1.7.1
